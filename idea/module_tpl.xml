@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/{{ module_root }}">
+    {%- for folder in source_folders %}
+      <sourceFolder url="file://$MODULE_DIR$/{{ folder }}" isTestSource="false" />
+    {%- endfor -%}
+    {%- for folder in test_folders %}
+      <sourceFolder url="file://$MODULE_DIR$/{{ folder }}" isTestSource="true" />
+    {%- endfor -%}
+    {%- for folder in exclude_folders %}
+      <excludeFolder url="file://$MODULE_DIR$/{{ folder }}" />
+    {%- endfor -%}
+    {%- for pattern in exclude_patterns %}
+      <excludePattern pattern="{{ pattern }}" />
+    {%- endfor %}
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
