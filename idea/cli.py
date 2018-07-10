@@ -2,7 +2,6 @@ import os
 from collections import namedtuple
 from pathlib import Path
 from importlib import resources
-from typing import Union, List
 
 import click
 from jinja2 import Template
@@ -22,10 +21,18 @@ def cli():
     pass
 
 
+def get_project_root():
+    path = Path(os.getcwd())
+    while path.parent:
+        if (path / '.idea').exists():
+            return path
+        path = path.parent
+    raise click.BadParameter("Doesn't look like you're inside an IDEA project")
+
+
 def read_xml(xml_path: Path) -> etree.ElementTree:
     if not xml_path.exists():
         raise click.BadParameter(f'File "{str(xml_path)}" does not exist')
-
     return etree.fromstring(xml_path.read_bytes())
 
 
@@ -33,11 +40,9 @@ Module = namedtuple('Module', ['iml', 'root'])
 
 
 @cli.command(name='list')
-@click.option('-p', '--project', type=Directory, show_default=True,
-              help='Path to project root')
-def list_modules(project=None):
+def list_modules():
     """List project's modules"""
-    project = Path(project if project is not None else os.getcwd())
+    project = get_project_root()
     xml_path = project / '.idea' / 'modules.xml'
     xml_node = read_xml(xml_path).find('component/modules')
 
@@ -56,11 +61,9 @@ def list_modules(project=None):
 
 
 @cli.command(name='scan')
-@click.option('-p', '--project', type=Directory, show_default=True,
-              help='Path to project root')
-def scan_modules(project=None):
+def scan_modules():
     """List project's modules"""
-    project_dir = Path(project if project is not None else os.getcwd())
+    project_dir = get_project_root()
     for path in project_dir.glob('**/pom.xml'):
         if 'node_modules' not in path.parents:
             print(path.parent.relative_to(project_dir))
@@ -69,14 +72,12 @@ def scan_modules(project=None):
 @cli.command()
 @click.argument('path', type=Directory)
 @click.option('-n', '--name', help='Custom module name')
-@click.option('-p', '--project', type=Directory, show_default=True,
-              help='Path to project root')
 def add(path: str, name=None, project=os.getcwd()):
     """Add a module to the project"""
     module_root = Path(path)
     name = module_root.name if not name else name
 
-    project_dir = Path(project if project is not None else os.getcwd())
+    project_dir = get_project_root()
     idea_dir = project_dir / '.idea'
     iml_path = idea_dir / f'{name}.iml'
     if iml_path.exists():
